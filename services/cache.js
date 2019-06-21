@@ -9,7 +9,17 @@ const client = redis.createClient(redisUrl);
 let exec = mongoose.Query.prototype.exec;
 client.get = util.promisify(client.get);
 
+
+mongoose.Query.prototype.cache = function () {
+  this.useCache = true
+  return this
+}
+
 mongoose.Query.prototype.exec = async function() {
+  if (!this.useCache) {
+    return exec.apply(this, arguments)
+  }
+
   const key = JSON.stringify(
     Object.assign({}, this.getQuery(), {
       collection: this.mongooseCollection.name
